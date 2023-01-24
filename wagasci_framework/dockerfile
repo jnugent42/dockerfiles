@@ -130,4 +130,3 @@ RUN cmake .. \
    -DWAGASCI_REWEIGHT_PATH=/opt/wagasci_framework/WagasciRW \
    -DWITH_T2KREWEIGHT=on
 RUN make -j"$(nproc)" 
-# RUN make install

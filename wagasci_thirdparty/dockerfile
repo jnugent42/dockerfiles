@@ -58,7 +58,6 @@ WORKDIR "/opt"
 RUN mkdir -p "${GenFitDIR}"
 RUN mkdir -p "${GenFitDIR}/${GENFITVERS}"
 WORKDIR "/opt/GenFit"
-RUN realpath 02-00-00
 RUN mkdir -p "${GenFitDIR}/${GenFitVERS}"
 RUN mkdir -p "${GenFitDIR}/${GenFitVERS}-build"
 WORKDIR "${GenFitDIR}"
@@ -68,7 +67,6 @@ RUN git checkout -b v${GenFitVERS}
 WORKDIR "${GenFitDIR}"/${GenFitVERS}-build
 RUN cmake -DCMAKE_INSTALL_PREFIX=$GenFitDIR/$GENFITVERS -DCMAKE_CXX_STANDARD=11  $GenFitDIR/sources
 RUN cmake --build . --target install -- -j"$(nproc)"
-ENV export GENFITDIR="${GenFitDIR}/${GenFitVERS}"
     
 RUN rm -rf "${GenFitDIR}"/${GenFitVERS}-build
 
@@ -82,8 +80,6 @@ RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/yaml-cpp -DYAML_BUILD_SHARED_LIBS=ON ..
 RUN make -j"$(nproc)"
 RUN make install
     
-# RUN rm -rf /opt/yaml-cpp/build
-
 FROM jnugent42/t2kreweight:centos_7
 WORKDIR /
 
