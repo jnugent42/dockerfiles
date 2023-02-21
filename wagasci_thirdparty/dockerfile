@@ -90,9 +90,20 @@ COPY --from=boost_build /opt/BOOST /opt/BOOST
 ENV GEANTVERS="10.6.2"
 ENV GEANTSRC="/opt/geant4-sources"
 COPY --from=geant_build /opt/geant4-${GEANTVERS} /opt/geant4-${GEANTVERS}
-RUN echo "source /opt/geant4-${GEANTVERS}/bin/geant4.sh" >> /etc/bashrc
-SHELL ["/bin/bash", "--login", "-c"]
+ENV G4NEUTRONHPDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4NDL4.6"
+ENV G4LEDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4EMLOW7.9.1"
+ENV G4LEVELGAMMADATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/PhotonEvaporation5.5"
+ENV G4RADIOACTIVEDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/RadioactiveDecay5.4"
+ENV G4PARTICLEXSDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4PARTICLEXS2.1"
+ENV G4PIIDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4PII1.3"
+ENV G4REALSURFACEDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/RealSurface2.1.1"
+ENV G4SAIDXSDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4SAIDDATA2.0"
+ENV G4ABLADATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4ABLA3.1"
+ENV G4INCLDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4INCL1.0"
+ENV G4ENSDFSTATEDATA="/opt/geant4-${GEANTVERS}/share/Geant4-10.6.2/data/G4ENSDFSTATE2.2"
 
+
+# RUN make install
 ENV GENFITVERS="02-00-00"
 ENV GenFitDIR="/opt/GenFit"
 COPY --from=genfit_build $GenFitDIR/$GENFITVERS $GenFitDIR/$GENFITVERS

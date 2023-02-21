@@ -23,14 +23,13 @@ RUN yum -y install libxml2-devel gmp-devel gsl-devel log4cpp-devel bzip2-devel p
 
 RUN yum -y install xerces-c-devel qt5-qtbase-devel build-essential libexpat1-dev libxmu-dev libxerces-c-dev cmake-curses-gui qt5-default qtbase5-dev zlib1g-dev libmotif-dev
 
-RUN yum -y install vim nano gdb csh tcsh ed quota python-devel patch
+RUN yum -y install vim nano gdb csh tcsh ed quota python-devel patch parallel
 
 RUN sed -i "s/alias/#alias/g" /root/.bashrc
 RUN sed -i "s/alias/#alias/g" /root/.cshrc
 RUN sed -i "s/alias/#alias/g" /root/.tcshrc
 
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
-RUN /usr/bin/cmake --version
 
 ENV GTEST_MAIN_LIBRARY="/usr/lib64"
 ENV GTEST_LIBRARY="/usr/lib64"
