@@ -17,7 +17,7 @@ RUN mkdir -p /opt/wagasci_framework/WagasciMC/build
 WORKDIR /opt/wagasci_framework/WagasciMC
 RUN git checkout v0.3.1
 WORKDIR /opt/wagasci_framework/WagasciMC/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciMC -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 -DCMAKE_BUILD_TYPE=Debug ..
+RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciMC -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 ..
 RUN make -j"$(nproc)"
 RUN make install
 
@@ -29,7 +29,7 @@ RUN git checkout v0.3.0
 RUN mkdir /opt/wagasci_framework/wagasci-babymind-event-display/build
 RUN mkdir /opt/wagasci_framework/WagasciED
 WORKDIR /opt/wagasci_framework/wagasci-babymind-event-display/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciED -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DB2MC_PATH=/opt/wagasci_framework/WagasciMC -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=11 ..
+RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciED -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DB2MC_PATH=/opt/wagasci_framework/WagasciMC -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 ..
 RUN make -j"$(nproc)"
 RUN make install
 
@@ -44,7 +44,6 @@ RUN cmake .. \
    -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciTR \
    -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include \
    -DCMAKE_CXX_STANDARD=11 \
-   -DCMAKE_BUILD_TYPE=Debug \
    -DB2MC_PATH=/opt/wagasci_framework/WagasciMC \
    -DEVENT_DISPLAY_PATH=/opt/wagasci_framework/WagasciED \
    -DGENFIT_PATH=/opt/GenFit \
@@ -61,49 +60,47 @@ RUN git submodule update
 RUN mkdir /opt/wagasci_framework/WagasciReWeight/build
 RUN mkdir /opt/wagasci_framework/WagasciRW
 WORKDIR /opt/wagasci_framework/WagasciReWeight/build
-RUN cmake .. -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciRW -DB2MC_PATH=/opt/wagasci_framework/WagasciMC -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DWITH_T2KREWEIGHT=ON -DCMAKE_CXX_STANDARD=11 -DCMAKE_BUILD_TYPE=Debug 
+RUN cmake .. -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciRW -DB2MC_PATH=/opt/wagasci_framework/WagasciMC -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DWITH_T2KREWEIGHT=OFF -DCMAKE_CXX_STANDARD=11  
 RUN make 
 RUN make install 
-RUN rm -r /opt/wagasci_framework/WagasciReWeight/build/
-
-WORKDIR /opt/wagasci_framework 
-RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/WagasciCalibration WagasciCalibration
-WORKDIR /opt/wagasci_framework/WagasciCalibration
-RUN git submodule update --init --recursive
-RUN mkdir -p /opt/wagasci_framework/WagasciCalibration/build
-WORKDIR /opt/wagasci_framework/WagasciCalibration/build
-RUN cmake /opt/wagasci_framework/WagasciCalibration -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciCalibration -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DCMAKE_BUILD_TYPE=Debug 
-RUN make -j$(nproc)
-RUN make install
 
 # WORKDIR /opt/wagasci_framework 
-# RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/WagasciPerformance.git 
-# WORKDIR WagasciPerformance
-# RUN git checkout master
-# RUN mkdir /opt/wagasci_framework/WagasciPerformance/build
-# WORKDIR /opt/wagasci_framework/WagasciPerformance/build
-# RUN ls /opt/wagasci_framework
-# RUN ls /opt/wagasci_framework/WagasciPerformance
-# RUN cmake /opt/wagasci_framework/WagasciPerformance \
-#   -DB2MC_PATH=/opt/wagasci_framework/WagasciMC \
-#   -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciPerformance \
-#   -DCMAKE_BUILD_TYPE=Debug \
-#   -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include
-# RUN make -j${nproc}
+# RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/WagasciCalibration WagasciCalibration
+# WORKDIR /opt/wagasci_framework/WagasciCalibration
+# RUN git submodule update --init --recursive
+# RUN mkdir -p /opt/wagasci_framework/WagasciCalibration/build
+# WORKDIR /opt/wagasci_framework/WagasciCalibration/build
+# RUN cmake /opt/wagasci_framework/WagasciCalibration -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciCalibration -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include  
+# RUN make -j$(nproc)
+# RUN make install
 
 WORKDIR /opt/wagasci_framework 
-RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/wagasci-babymind-data-converter.git WagasciConverter
-WORKDIR /opt/wagasci_framework/WagasciConverter
-RUN git checkout develop
-RUN mkdir /opt/wagasci_framework/WagasciConverter/build
-WORKDIR /opt/wagasci_framework/WagasciConverter/build
-RUN cmake /opt/wagasci_framework/WagasciConverter \
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/WagasciPerformance.git 
+WORKDIR WagasciPerformance
+RUN git checkout master
+RUN mkdir /opt/wagasci_framework/WagasciPerformance/build
+WORKDIR /opt/wagasci_framework/WagasciPerformance/build
+RUN ls /opt/wagasci_framework
+RUN ls /opt/wagasci_framework/WagasciPerformance
+RUN cmake /opt/wagasci_framework/WagasciPerformance \
   -DB2MC_PATH=/opt/wagasci_framework/WagasciMC \
-  -DWAGASCI_CALIBRATION_PATH=/opt/wagasci_framework/WagasciCalibration \
-  -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include \
+  -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciPerformance \
   -DCMAKE_BUILD_TYPE=Debug \
-  -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciConverter
+  -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include
 RUN make -j${nproc}
+
+# WORKDIR /opt/wagasci_framework 
+# RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/wagasci-babymind-data-converter.git WagasciConverter
+# WORKDIR /opt/wagasci_framework/WagasciConverter
+# RUN git checkout develop
+# RUN mkdir /opt/wagasci_framework/WagasciConverter/build
+# WORKDIR /opt/wagasci_framework/WagasciConverter/build
+# RUN cmake /opt/wagasci_framework/WagasciConverter \
+#   -DB2MC_PATH=/opt/wagasci_framework/WagasciMC \
+#   -DWAGASCI_CALIBRATION_PATH=/opt/wagasci_framework/WagasciCalibration \
+#   -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include \
+#   -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciConverter
+# RUN make -j${nproc}
 
 WORKDIR /opt/wagasci_framework 
 RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/wagasci-babymind-mctruth-based-study.git WagasciMCTruth
@@ -114,7 +111,6 @@ RUN cmake /opt/wagasci_framework/WagasciMCTruth \
   -DB2MC_PATH=/opt/wagasci_framework/WagasciMC \
   -DEVENT_DISPLAY_PATH=/opt/wagasci_framework/WagasciED \
   -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include \
-  -DCMAKE_BUILD_TYPE=Debug \
   -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciMCTruth
 RUN make -j${nproc}
 
@@ -130,11 +126,10 @@ RUN cmake .. \
    -DCMAKE_INSTALL_PREFIX=/opt/wagasci_framework/WagasciXsec \
    -DB2MC_PATH=/opt/wagasci_framework/WagasciMC \
    -DEVENT_DISPLAY_PATH=/opt/wagasci_framework/WagasciED \
-   -DCMAKE_BUILD_TYPE=Debug \
    -DGENFIT_PATH=/opt/GenFit \
    -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include \
    -DWAGASCI_REWEIGHT_PATH=/opt/wagasci_framework/WagasciRW \
-   -DWITH_T2KREWEIGHT=on
+   -DWITH_T2KREWEIGHT=OFF
 RUN make -j"$(nproc)" 
 
 RUN export PATH=/opt/rh/devtoolset-9/root/usr/bin${PATH:+:${PATH}}

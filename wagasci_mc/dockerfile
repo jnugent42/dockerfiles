@@ -1,0 +1,67 @@
+FROM jnugent42/wagasci_thirdparty:centos_7 AS wagmc_build
+WORKDIR /
+
+RUN mkdir -p ~/.ssh/
+RUN ssh-keyscan git.t2k.org > ~/.ssh/known_hosts
+
+ENV BOOST_ROOT="${BOOSTDIR}/boost_${BOOSTVERS}_sources" 
+RUN mkdir -p /opt/wagasci_mc
+
+#/* RUN yum -y install parallel */
+#/* RUN parallel */
+
+WORKDIR /opt/wagasci_mc
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/wagasci-babymind-monte-carlo.git WagasciMC
+RUN mkdir -p /opt/wagasci_mc/WagasciMC/build
+WORKDIR /opt/wagasci_mc/WagasciMC
+RUN git checkout v0.3.1
+WORKDIR /opt/wagasci_mc/WagasciMC/build
+RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/wagasci_mc/WagasciMC -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 -DWITH_GDML=ON ..
+RUN make -j"$(nproc)"
+RUN make install
+
+WORKDIR /opt/wagasci_mc 
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/wagasci-babymind-event-display.git
+WORKDIR /opt/wagasci_mc/wagasci-babymind-event-display
+RUN git branch -r
+RUN git checkout v0.3.0 
+RUN mkdir /opt/wagasci_mc/wagasci-babymind-event-display/build
+RUN mkdir /opt/wagasci_mc/WagasciED
+WORKDIR /opt/wagasci_mc/wagasci-babymind-event-display/build
+RUN cmake -DCMAKE_INSTALL_PREFIX=/opt/wagasci_mc/WagasciED -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DB2MC_PATH=/opt/wagasci_mc/WagasciMC -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 ..
+RUN make -j"$(nproc)"
+RUN make install
+
+WORKDIR /opt/wagasci_mc 
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/wagasci-babymind-track-reconstruction.git
+WORKDIR /opt/wagasci_mc/wagasci-babymind-track-reconstruction 
+RUN git checkout master
+RUN mkdir /opt/wagasci_mc/wagasci-babymind-track-reconstruction/build
+RUN mkdir /opt/wagasci_mc/WagasciTR
+WORKDIR /opt/wagasci_mc/wagasci-babymind-track-reconstruction/build
+RUN cmake .. \
+   -DCMAKE_INSTALL_PREFIX=/opt/wagasci_mc/WagasciTR \
+   -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include \
+   -DCMAKE_CXX_STANDARD=11 \
+   -DB2MC_PATH=/opt/wagasci_mc/WagasciMC \
+   -DEVENT_DISPLAY_PATH=/opt/wagasci_mc/WagasciED \
+   -DGENFIT_PATH=/opt/GenFit \
+   -DCMAKE_BUILD_TYPE=Debug
+RUN make -j"$(nproc)"
+RUN make install
+
+WORKDIR /opt/wagasci_mc 
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/WagasciReWeight.git
+WORKDIR /opt/wagasci_mc/WagasciReWeight
+RUN git checkout v0.1.3
+RUN git submodule init
+RUN git submodule update
+RUN mkdir /opt/wagasci_mc/WagasciReWeight/build
+RUN mkdir /opt/wagasci_mc/WagasciRW
+WORKDIR /opt/wagasci_mc/WagasciReWeight/build
+RUN cmake .. -DCMAKE_INSTALL_PREFIX=/opt/wagasci_mc/WagasciRW -DB2MC_PATH=/opt/wagasci_mc/WagasciMC -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include -DWITH_T2KREWEIGHT=OFF -DCMAKE_CXX_STANDARD=11  
+RUN make 
+RUN make install 
+
+FROM jnugent42/wagasci_thirdparty:centos_7
+COPY --from=wagmc_build /opt/wagasci_mc /opt/wagasci_mc

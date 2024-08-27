@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 FROM jnugent42/buildbox:centos_7 AS pythia6_build
 WORKDIR /
 
@@ -27,15 +26,43 @@ RUN git clone https://github.com/root-project/root.git /opt/root-src
 WORKDIR /opt/root-src
 RUN git checkout v6-22-08
 WORKDIR /opt/root/build
+RUN gcc --version
 RUN cmake /opt/root-src \
     -DCMAKE_CXX_STANDARD=11 \
     -Dminuit2=ON \
     -Dmathmore=ON \
     -Dpythia6=ON -DPYTHIA6_LIBRARY=/opt/pythia/6.4.28/libPythia6.so \
+    -DPYTHON_EXECUTABLE=/usr/bin/python3 \ 
+    -DPython3_ROOT_DIR=/usr/bin \
+    -DPYTHON=ON -Dpyroot=ON \
     -DCMAKE_BUILD_TYPE=RELEASE \
     -DCMAKE_INSTALL_PREFIX=/opt/root/v6-22-08/ \
      -Dfortran=ON \
      -Ddavix=OFF  
+RUN make -j"$(nproc)"
+RUN make install
+
+FROM root_build AS root_BM_build
+WORKDIR /
+RUN mkdir -p /opt/root_BM/build /opt/root_BM/v6-22-08/
+
+RUN git clone https://github.com/root-project/root.git /opt/root_BM-src
+WORKDIR /opt/root_BM-src
+RUN git checkout v6-22-08
+WORKDIR /opt/root_BM/build
+RUN gcc --version
+RUN cmake /opt/root_BM-src \
+    -DCMAKE_CXX_STANDARD=17 \
+    -Dminuit2=ON \
+    -Dmathmore=ON \
+    -Dpythia6=ON -DPYTHIA6_LIBRARY=/opt/pythia/6.4.28/libPythia6.so \
+    -DPYTHON_EXECUTABLE=/usr/bin/python3 \
+    -DPython3_ROOT_DIR=/usr/bin \
+    -DPYTHON=ON -Dpyroot=ON \
+    -DCMAKE_BUILD_TYPE=RELEASE \
+    -DCMAKE_INSTALL_PREFIX=/opt/root_BM/v6-22-08/ \
+     -Dfortran=ON \
+     -Ddavix=OFF
 RUN make -j"$(nproc)"
 RUN make install
 
@@ -46,6 +73,9 @@ ENV PYTHIA6=/opt/pythia/6.4.28
 ENV LD_LIBRARY_PATH=${PYTHIA6}:${LD_LIBRARY_PATH}
 
 COPY --from=root_build /opt/root/v6-22-08/ /opt/root/v6-22-08/
+COPY --from=root_BM_build /opt/root_BM/v6-22-08/ /opt/root_BM/v6-22-08/
 ENV ROOTSYS=/opt/root/v6-22-08
 ENV PATH=${ROOTSYS}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
+ENV PYTHONPATH=${ROOTSYS}/lib
+

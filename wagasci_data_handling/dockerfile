@@ -1,0 +1,75 @@
+FROM jnugent42/wagasci_mc:centos_7 AS wagdh_build
+WORKDIR /
+
+RUN mkdir -p ~/.ssh/
+RUN ssh-keyscan git.t2k.org > ~/.ssh/known_hosts
+
+ENV BOOST_ROOT="${BOOSTDIR}/boost_${BOOSTVERS}_sources" 
+RUN mkdir -p /opt/wagasci_data_handling
+
+WORKDIR /opt/wagasci_data_handling 
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/WagasciCalibration.git --verbose
+WORKDIR /opt/wagasci_data_handling/WagasciCalibration
+RUN git submodule update --init --recursive
+RUN mkdir -p /opt/wagasci_data_handling/WagasciCalibration/build
+WORKDIR /opt/wagasci_data_handling/WagasciCalibration/build
+RUN cmake /opt/wagasci_data_handling/WagasciCalibration -DCMAKE_INSTALL_PREFIX=/opt/wagasci_data_handling/WagasciCalibration -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include  
+RUN make -j$(nproc)
+RUN make install
+
+WORKDIR /opt/wagasci_data_handling 
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/WagasciPerformance.git 
+WORKDIR WagasciPerformance
+RUN git checkout master
+RUN mkdir /opt/wagasci_data_handling/WagasciPerformance/build
+WORKDIR /opt/wagasci_data_handling/WagasciPerformance/build
+RUN ls /opt/wagasci_data_handling
+RUN ls /opt/wagasci_data_handling/WagasciPerformance
+RUN cmake /opt/wagasci_data_handling/WagasciPerformance \
+  -DB2MC_PATH=/opt/wagasci_data_handling/WagasciMC \
+  -DCMAKE_INSTALL_PREFIX=/opt/wagasci_data_handling/WagasciPerformance \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include
+RUN make -j${nproc}
+
+WORKDIR /opt/wagasci_data_handling 
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/wagasci-babymind-data-converter.git WagasciConverter
+WORKDIR /opt/wagasci_data_handling/WagasciConverter
+RUN git checkout develop
+RUN mkdir /opt/wagasci_data_handling/WagasciConverter/build
+RUN mkdir /opt/wagasci_data_handling/WagasciC
+WORKDIR /opt/wagasci_data_handling/WagasciConverter/build
+RUN cmake /opt/wagasci_data_handling/WagasciConverter \
+  -DB2MC_PATH=/opt/wagasci_mc/WagasciMC \
+  -DWAGASCI_CALIBRATION_PATH=/opt/wagasci_data_handling/WagasciCalibration \
+  -DBoost_INCLUDE_DIR=/opt/BOOST/boost_1_73_0/include \
+  -DCMAKE_INSTALL_PREFIX=/opt/wagasci_data_handling/WagasciC
+RUN make -j${nproc}
+
+ENV ROOTSYS=/opt/root_BM/v6-22-08
+ENV PATH=${ROOTSYS}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
+ENV PYTHONPATH=${ROOTSYS}/lib
+
+WORKDIR /opt/wagasci_data_handling 
+RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/babymind_unpackingfw7.git BabyMINDUnpacker
+WORKDIR /opt/wagasci_data_handling/BabyMINDUnpacker
+RUN git checkout master
+WORKDIR /opt/wagasci_data_handling/BabyMINDUnpacker/build
+RUN cmake /opt/wagasci_data_handling/BabyMINDUnpacker \
+  -DCMAKE_INSTALL_PREFIX=/opt/wagasci_data_handling/BabyMINDUnpacker \
+  -DCMAKE_CXX_STANDARD=17
+RUN make -j${nproc}
+
+WORKDIR /opt/wagasci_data_handling
+RUN yum -y install python3-devel
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade --user wagascianpy
+
+ENV ROOTSYS=/opt/root/v6-22-08
+ENV PATH=${ROOTSYS}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
+ENV PYTHONPATH=${ROOTSYS}/lib
+
+FROM jnugent42/wagasci_mc:centos_7
+COPY --from=wagdh_build /opt/wagasci_data_handling /opt/wagasci_data_handling
