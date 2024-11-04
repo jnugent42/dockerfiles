@@ -49,7 +49,7 @@ RUN make -j${nproc}
 ENV ROOTSYS=/opt/root_BM/v6-22-08
 ENV PATH=${ROOTSYS}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
-ENV PYTHONPATH=${ROOTSYS}/lib
+ENV PYTHONPATH=${ROOTSYS}/lib:${PYTHONPATH}
 
 WORKDIR /opt/wagasci_data_handling 
 RUN --mount=type=ssh git clone git@git.t2k.org:wagasci_babymind/babymind_unpackingfw7.git BabyMINDUnpacker
@@ -61,15 +61,41 @@ RUN cmake /opt/wagasci_data_handling/BabyMINDUnpacker \
   -DCMAKE_CXX_STANDARD=17
 RUN make -j${nproc}
 
+# Installing pyenv by following this guide: https://qiita.com/ksugawara61/items/ba9a51ebfdaf8d1a1b48
+# I am installing pyenv into /opt but this might not be the best choice.
+# If you want to change the install directory please feel free to do it.
+#
+# The SSL drama is explained here: https://github.com/pyenv/pyenv/issues/2416
+#
+# Quite arbitrarily, I chose to install Python 3.10.4 because that is the final version available for
+# Ubuntu 22.04 LTS. You are free to update it as you please.
+ARG PYENV_ROOT=/opt/pyenv
+WORKDIR ${PYENV_ROOT}
+RUN yum -y install gcc zlib-devel bzip2 bzip2-devel readline readline-devel \
+  sqlite sqlite-devel git libffi-devel
+RUN yum install -y openssl openssl-devel openssl11-devel openssl11-lib
+RUN git clone https://github.com/pyenv/pyenv.git .
+ENV PYENV_ROOT="${PYENV_ROOT}"
+ENV PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:$PATH"
+RUN eval "$(pyenv init -)"
+RUN CPPFLAGS=$(pkg-config --cflags openssl11) LDFLAGS=$(pkg-config --libs openssl11) pyenv install 3.10.4
+RUN pyenv global 3.10.4 && pyenv rehash
+
+# Install the latest version of WagasciAnpy into the /opt/wagasci_data_handling/WagasciAnpy
+# folder. You should be able to execute wagascidb_viewer.py and all other scripts directly
+# from the command line. This is very confortable but it is achieved by setting Python 3.10
+# as the global interpreter, which may or may not be a desirable outcome.
+# A better solution would be to create a virtual environment for WagasciAnpy.
 WORKDIR /opt/wagasci_data_handling
-RUN yum -y install python3-devel
-RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install --upgrade --user wagascianpy
+RUN python3 -m pip install --no-cache-dir --upgrade pip
+RUN python3 -m pip install --no-cache-dir --upgrade --target /opt/wagasci_data_handling/WagasciAnpy wagascianpy==0.3.10
+ENV PYTHONPATH="/opt/wagasci_data_handling/WagasciAnpy:${PYTHONPATH}"
+ENV PATH="/opt/wagasci_data_handling/WagasciAnpy/bin:${PATH}"
 
 ENV ROOTSYS=/opt/root/v6-22-08
 ENV PATH=${ROOTSYS}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
-ENV PYTHONPATH=${ROOTSYS}/lib
+ENV PYTHONPATH=${ROOTSYS}/lib:${PYTHONPATH}
 
 FROM jnugent42/wagasci_mc:centos_7
 COPY --from=wagdh_build /opt/wagasci_data_handling /opt/wagasci_data_handling
